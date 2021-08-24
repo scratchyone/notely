@@ -20,7 +20,20 @@
 		let mid = c;
 		if (mid[mid.length - 1] === '\n') mid = mid + '\n';
 		if (mid.length == 0) return '';
-		else return '<span>' + mid + '</span>';
+		mid = mid.replaceAll(/^###### (.*)$/gm, '<h6>###### $1</h6>');
+		mid = mid.replaceAll(/^##### (.*)$/gm, '<h5>##### $1</h5>');
+		mid = mid.replaceAll(/^#### (.*)$/gm, '<h4>#### $1</h4>');
+		mid = mid.replaceAll(/^### (.*)$/gm, '<h3>### $1</h3>');
+		mid = mid.replaceAll(/^## (.*)$/gm, '<h2>## $1</h2>');
+		mid = mid.replaceAll(/^# (.*)$/gm, '<h1># $1</h1>');
+		mid = mid.replaceAll(/\*\*(.*)\*\*/gm, '<b>**$1**</b>');
+		mid = mid.replaceAll(/\*(.*)\*/gm, '<i>*$1*</i>');
+		mid = mid.replaceAll(/__(.*)__/gm, '<b>__$1__</b>');
+		mid = mid.replaceAll(/_(.*)_/gm, '<i>_$1_</i>');
+		mid = mid.replaceAll(/^\* (.*)$/gm, '• $1');
+		mid = mid.replaceAll(/^- (.*)$/gm, '• $1');
+
+		return '<span>' + mid + '</span>';
 	}
 	async function triggerCharInsertOrOverwrite(c: string) {
 		const start = getCaretPosition(textarea);
@@ -60,17 +73,19 @@
 			await triggerCharInsertOrOverwrite('\n');
 		} else if (e.key === 'Backspace') {
 			e.preventDefault();
-			debouncedTriggerChangeBS();
-			const start = getCaretPosition(textarea);
-			const end = getCaretEndPosition(textarea);
-			console.log(start, '-', end);
-			if (start === end) $data = $data.slice(0, start - 1) + $data.slice(end);
-			else $data = $data.slice(0, start) + $data.slice(end);
-			textarea.innerHTML = toCE($data);
-			await tick();
-			console.log('Going to: ', start - 1);
-			if (start === end) setCaretPosition(getCaretData(textarea, start - 1));
-			else setCaretPosition(getCaretData(textarea, start));
+			if (!(getCaretPosition(textarea) == 0 && getCaretEndPosition(textarea) == 0)) {
+				debouncedTriggerChangeBS();
+				const start = getCaretPosition(textarea);
+				const end = getCaretEndPosition(textarea);
+				console.log(start, '-', end);
+				if (start === end) $data = $data.slice(0, start - 1) + $data.slice(end);
+				else $data = $data.slice(0, start) + $data.slice(end);
+				textarea.innerHTML = toCE($data);
+				await tick();
+				console.log('Going to: ', start - 1);
+				if (start === end) setCaretPosition(getCaretData(textarea, start - 1));
+				else setCaretPosition(getCaretData(textarea, start));
+			}
 		} else if (e.key == 'Meta' || e.key == 'Control' || e.key == 'Alt' || e.key == 'Shift') {
 		} else if (
 			e.key == 'ArrowLeft' ||
@@ -181,7 +196,7 @@
 		on:keydown={keydown}
 		on:keyup={keyup}
 		autofocus
-		placeholder="Start typing..."
+		placeholder="Start typing markdown..."
 	/>
 {/if}
 <a class="statement" href="https://svelte.dev" target="_blank">Notely is powered by Svelte</a>
@@ -231,5 +246,15 @@
 			background-color: #2a2a2a;
 			color: #fff;
 		}
+	}
+	#textarea:global h1,
+	#textarea:global h2,
+	#textarea:global h3,
+	#textarea:global h4,
+	#textarea:global h5,
+	#textarea:global h6 {
+		margin: 0px;
+		margin-bottom: 10px;
+		display: inline-block;
 	}
 </style>
