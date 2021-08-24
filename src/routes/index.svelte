@@ -29,7 +29,9 @@
 		autofocus
 	/>
 {/if}
+<a class="statement" href="https://svelte.dev" target="_blank">Notely is powered by Svelte</a>
 <noscript> JavaScript is required to use this app. </noscript>
+<title>Notely</title>
 
 <style>
 	#textarea {
@@ -49,5 +51,16 @@
 		font-size: 17px;
 		font-family: 'system-ui';
 		display: block;
+	}
+	.statement {
+		font-size: 15px;
+		color: #999;
+		position: absolute;
+		bottom: 10px;
+		text-align: center;
+		font-family: 'system-ui';
+		left: 0px;
+		right: 0px;
+		text-decoration: underline;
 	}
 </style>
