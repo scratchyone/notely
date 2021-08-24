@@ -61,6 +61,9 @@ export function setCaretPosition(d) {
 	if (d.node) {
 		var sel = window.getSelection(),
 			range = document.createRange();
+		if (d.position > d.node.length) {
+			d.position = d.node.length;
+		}
 		range.setStart(d.node, d.position);
 		range.collapse(true);
 		sel.removeAllRanges();
