@@ -40,7 +40,6 @@
 		const end = getCaretEndPosition(textarea);
 		$data = $data.slice(0, start) + c + $data.slice(end);
 		textarea.innerHTML = toCE($data);
-		await tick();
 		setCaretPosition(getCaretData(textarea, start + c.length));
 	}
 	onMount(() => {
@@ -81,7 +80,6 @@
 				if (start === end) $data = $data.slice(0, start - 1) + $data.slice(end);
 				else $data = $data.slice(0, start) + $data.slice(end);
 				textarea.innerHTML = toCE($data);
-				await tick();
 				console.log('Going to: ', start - 1);
 				if (start === end) setCaretPosition(getCaretData(textarea, start - 1));
 				else setCaretPosition(getCaretData(textarea, start));
@@ -104,7 +102,6 @@
 			navigator.clipboard.writeText(text);
 			$data = $data.slice(0, start) + $data.slice(end);
 			textarea.innerHTML = toCE($data);
-			await tick();
 			setCaretPosition(getCaretData(textarea, start));
 		} else if (
 			(e.key == 'z' &&
@@ -131,7 +128,6 @@
 					console.log('Redo: ' + p);
 					$data = p;
 					textarea.innerHTML = toCE(p);
-					await tick();
 					setCaretPositionSE(getCaretData(textarea, pos.start), getCaretData(textarea, pos.end));
 				}
 			} else {
@@ -158,7 +154,6 @@
 					console.log('Undo: ' + p);
 					$data = p;
 					textarea.innerHTML = toCE(p);
-					await tick();
 					setCaretPositionSE(getCaretData(textarea, pos.start), getCaretData(textarea, pos.end));
 				}
 			} else {
@@ -189,7 +184,6 @@
 		navigator.clipboard.writeText(text);
 		$data = $data.slice(0, start) + $data.slice(end);
 		textarea.innerHTML = toCE($data);
-		await tick();
 		setCaretPosition(getCaretData(textarea, start));
 	}
 	async function paste(e: ClipboardEvent) {
