@@ -82,7 +82,6 @@
 		start: getCaretPosition(textarea),
 		end: getCaretEndPosition(textarea)
 	});
-	const down_keys = [];
 	function triggerChange() {
 		store.snapshot({
 			text: $data,
@@ -93,7 +92,6 @@
 	const debouncedTriggerChange = debounce(triggerChange, 300, true);
 	const debouncedTriggerChangeBS = debounce(triggerChange, 200, true);
 	async function keydown(e: KeyboardEvent) {
-		down_keys.push(e.key);
 		if (e.key === 'Enter') {
 			e.preventDefault();
 			triggerChange();
@@ -124,9 +122,9 @@
 			e.key == 'ArrowUp' ||
 			e.key == 'ArrowDown'
 		) {
-		} else if (e.key == 'a' && (down_keys.includes('Control') || down_keys.includes('Meta'))) {
-		} else if (e.key == 'c' && (down_keys.includes('Control') || down_keys.includes('Meta'))) {
-		} else if (e.key == 'x' && (down_keys.includes('Control') || down_keys.includes('Meta'))) {
+		} else if (e.key == 'a' && (e.ctrlKey || e.metaKey)) {
+		} else if (e.key == 'c' && (e.ctrlKey || e.metaKey)) {
+		} else if (e.key == 'x' && (e.ctrlKey || e.metaKey)) {
 			e.preventDefault();
 			triggerChange();
 			const start = getCaretPosition(textarea);
@@ -137,10 +135,8 @@
 			textarea.innerHTML = toCE($data);
 			setCaretPosition(getCaretData(textarea, start));
 		} else if (
-			(e.key == 'z' &&
-				(down_keys.includes('Control') || down_keys.includes('Meta')) &&
-				down_keys.includes('Shift')) ||
-			(e.key == 'y' && (down_keys.includes('Control') || down_keys.includes('Meta')))
+			(e.key == 'z' && (e.ctrlKey || e.metaKey) && e.shiftKey) ||
+			(e.key == 'y' && (e.ctrlKey || e.metaKey))
 		) {
 			e.preventDefault();
 			debouncedTriggerChange.clear();
@@ -151,7 +147,7 @@
 				textarea.innerHTML = toCE(p.text);
 				setCaretPositionSE(getCaretData(textarea, p.start), getCaretData(textarea, p.end));
 			}
-		} else if (e.key == 'z' && (down_keys.includes('Control') || down_keys.includes('Meta'))) {
+		} else if (e.key == 'z' && (e.ctrlKey || e.metaKey)) {
 			e.preventDefault();
 			debouncedTriggerChange.flush();
 			debouncedTriggerChangeBS.flush();
@@ -161,7 +157,7 @@
 				textarea.innerHTML = toCE(p.text);
 				setCaretPositionSE(getCaretData(textarea, p.start), getCaretData(textarea, p.end));
 			}
-		} else if (e.key == 'v' && (down_keys.includes('Control') || down_keys.includes('Meta'))) {
+		} else if (e.key == 'v' && (e.ctrlKey || e.metaKey)) {
 			e.preventDefault();
 			triggerChange();
 			const text = await navigator.clipboard.readText();
@@ -172,9 +168,7 @@
 			await triggerCharInsertOrOverwrite(e.key);
 		}
 	}
-	function keyup(e: KeyboardEvent) {
-		down_keys.splice(down_keys.indexOf(e.key), 1);
-	}
+	function keyup(e: KeyboardEvent) {}
 	async function cut(e: ClipboardEvent) {
 		e.preventDefault();
 		triggerChange();
