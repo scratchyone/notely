@@ -1,5 +1,5 @@
 import { browser } from '$app/env';
-import LogBit from 'logbit';
+import { LogBit } from 'logbit';
 const console = new LogBit('CaretManager');
 
 export function getCaretPosition(el) {

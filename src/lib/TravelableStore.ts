@@ -1,4 +1,4 @@
-import LogBit from 'logbit';
+import { LogBit } from 'logbit';
 const console = new LogBit('TravelableStore');
 /**
  * @class TravelableStore

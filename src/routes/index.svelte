@@ -1,4 +1,5 @@
 <script type="text/typescript">
+	import { LogBit, setLogLevel, LOG_LEVELS } from 'logbit';
 	import { browser } from '$app/env';
 	import debounce from 'debounce';
 	import { data } from '$lib/store';
@@ -11,7 +12,6 @@
 		getCaretEndPosition,
 		setCaretPositionSE
 	} from '$lib/caret';
-	import LogBit, { setLogLevel, LOG_LEVELS } from 'logbit';
 	const log = new LogBit('MainUIHandler');
 	if (browser && location.hostname != 'localhost') {
 		setLogLevel(LOG_LEVELS.INFO);
