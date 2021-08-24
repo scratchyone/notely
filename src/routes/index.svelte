@@ -63,4 +63,10 @@
 		right: 0px;
 		text-decoration: underline;
 	}
+	@media (prefers-color-scheme: dark) {
+		#textarea {
+			background-color: #2a2a2a;
+			color: #fff;
+		}
+	}
 </style>
