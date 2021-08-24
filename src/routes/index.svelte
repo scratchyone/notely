@@ -16,8 +16,17 @@
 		if (browser) localStorage.setItem('text', text);
 	}, 500);
 	data.subscribe(debounced);
+	function sanitizeHTML(unsafe) {
+		return unsafe
+			.replace(/&/g, '&amp;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;')
+			.replace(/"/g, '&quot;')
+			.replace(/'/g, '&#039;');
+	}
+
 	function toCE(c: string): string {
-		let mid = c;
+		let mid = sanitizeHTML(c);
 		if (mid[mid.length - 1] === '\n') mid = mid + '\n';
 		if (mid.length == 0) return '';
 		mid = mid.replaceAll(/^###### (.*)$/gm, '<h6>###### $1</h6>');
@@ -38,6 +47,7 @@
 	async function triggerCharInsertOrOverwrite(c: string) {
 		const start = getCaretPosition(textarea);
 		const end = getCaretEndPosition(textarea);
+		console.log(start, '-', end);
 		$data = $data.slice(0, start) + c + $data.slice(end);
 		textarea.innerHTML = toCE($data);
 		setCaretPosition(getCaretData(textarea, start + c.length));
@@ -229,7 +239,8 @@
 		resize: none;
 		box-sizing: border-box;
 		border: none;
-		white-space: pre;
+		overflow-wrap: break-word;
+		word-break: break-word;
 	}
 	[contenteditable='true']:empty:before {
 		content: attr(placeholder);
