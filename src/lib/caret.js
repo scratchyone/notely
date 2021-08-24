@@ -1,4 +1,6 @@
 import { browser } from '$app/env';
+import LogBit from 'logbit';
+const console = new LogBit('CaretManager');
 
 export function getCaretPosition(el) {
 	var caretOffset = 0,
@@ -68,7 +70,7 @@ export function setCaretPosition(d) {
 		range.collapse(true);
 		sel.removeAllRanges();
 		sel.addRange(range);
-	} else console.log('Not a node');
+	} else console.error('Failed to move caret, target node does not exist');
 }
 export function setCaretPositionSE(d, e) {
 	if (d.node) {
@@ -78,5 +80,5 @@ export function setCaretPositionSE(d, e) {
 		range.setEnd(e.node, e.position);
 		sel.removeAllRanges();
 		sel.addRange(range);
-	} else console.log('Not a node');
+	} else console.error('Failed to move caret, target node does not exist');
 }

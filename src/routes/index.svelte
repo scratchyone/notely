@@ -3,6 +3,7 @@
 	import debounce from 'debounce';
 	import { data } from '$lib/store';
 	import Toolbar from '$lib/toolbar.svelte';
+	import { TravelableStore } from '$lib/TravelableStore';
 	import {
 		getCaretData,
 		getCaretPosition,
@@ -10,6 +11,13 @@
 		getCaretEndPosition,
 		setCaretPositionSE
 	} from '$lib/caret';
+	import LogBit, { setLogLevel, LOG_LEVELS } from 'logbit';
+	const log = new LogBit('MainUIHandler');
+	if (browser && location.hostname != 'localhost') {
+		setLogLevel(LOG_LEVELS.INFO);
+	} else {
+		setLogLevel(LOG_LEVELS.TRACE);
+	}
 	import { onMount, tick } from 'svelte';
 	let textarea;
 	const debounced = debounce(async (text) => {
@@ -47,7 +55,7 @@
 	async function triggerCharInsertOrOverwrite(c: string) {
 		const start = getCaretPosition(textarea);
 		const end = getCaretEndPosition(textarea);
-		console.log(start, '-', end);
+		log.trace('Current caret position:', start, '-', end);
 		$data = $data.slice(0, start) + c + $data.slice(end);
 		textarea.innerHTML = toCE($data);
 		setCaretPosition(getCaretData(textarea, start + c.length));
@@ -57,17 +65,27 @@
 			textarea.innerHTML = toCE(localStorage.getItem('text'));
 		}
 	});
-	const prev_text = [];
-	const prev_cursor_positions = [];
-	let next_text = [];
-	let next_cursor_positions = [];
+	const store = new TravelableStore<{ text: string; start: number; end: number }>(
+		() => {
+			return {
+				text: $data,
+				start: getCaretPosition(textarea),
+				end: getCaretEndPosition(textarea)
+			};
+		},
+		undefined,
+		50
+	);
+
+	store.snapshot({
+		text: $data,
+		start: getCaretPosition(textarea),
+		end: getCaretEndPosition(textarea)
+	});
 	const down_keys = [];
 	function triggerChange() {
-		console.log('Undo stack: ' + prev_text);
-		prev_text.push($data);
-		next_text = [];
-		next_cursor_positions = [];
-		prev_cursor_positions.push({
+		store.snapshot({
+			text: $data,
 			start: getCaretPosition(textarea),
 			end: getCaretEndPosition(textarea)
 		});
@@ -86,13 +104,18 @@
 				debouncedTriggerChangeBS();
 				const start = getCaretPosition(textarea);
 				const end = getCaretEndPosition(textarea);
-				console.log(start, '-', end);
+				log.trace('Current caret position: ', start, '-', end);
 				if (start === end) $data = $data.slice(0, start - 1) + $data.slice(end);
 				else $data = $data.slice(0, start) + $data.slice(end);
 				textarea.innerHTML = toCE($data);
-				console.log('Going to: ', start - 1);
-				if (start === end) setCaretPosition(getCaretData(textarea, start - 1));
-				else setCaretPosition(getCaretData(textarea, start));
+
+				if (start === end) {
+					log.trace('Moving caret to: ', start - 1);
+					setCaretPosition(getCaretData(textarea, start - 1));
+				} else {
+					log.trace('Moving caret to: ', start);
+					setCaretPosition(getCaretData(textarea, start));
+				}
 			}
 		} else if (e.key == 'Meta' || e.key == 'Control' || e.key == 'Alt' || e.key == 'Shift') {
 		} else if (
@@ -122,54 +145,22 @@
 			e.preventDefault();
 			debouncedTriggerChange.clear();
 			debouncedTriggerChangeBS.clear();
-			if (next_text.length > 0) {
-				let p = next_text.pop();
-				let pos = next_cursor_positions.pop();
-				prev_text.push(p);
-				prev_cursor_positions.push(pos);
-
-				while (p == $data) {
-					p = next_text.pop();
-					pos = next_cursor_positions.pop();
-					prev_text.push(p);
-					prev_cursor_positions.push(pos);
-				}
-				if (p != undefined) {
-					console.log('Redo: ' + p);
-					$data = p;
-					textarea.innerHTML = toCE(p);
-					setCaretPositionSE(getCaretData(textarea, pos.start), getCaretData(textarea, pos.end));
-				}
-			} else {
-				console.warn('Nothing to redo');
+			const p = store.redo();
+			if (p) {
+				$data = p.text;
+				textarea.innerHTML = toCE(p.text);
+				setCaretPositionSE(getCaretData(textarea, p.start), getCaretData(textarea, p.end));
 			}
 		} else if (e.key == 'z' && (down_keys.includes('Control') || down_keys.includes('Meta'))) {
 			e.preventDefault();
 			debouncedTriggerChange.flush();
 			debouncedTriggerChangeBS.flush();
-			if (prev_text.length > 0) {
-				let p = prev_text.pop();
-				let pos = prev_cursor_positions.pop();
-
-				while (p == $data) {
-					p = prev_text.pop();
-					pos = prev_cursor_positions.pop();
-				}
-				if (p != undefined) {
-					next_text.push($data);
-					next_cursor_positions.push({
-						start: getCaretPosition(textarea),
-						end: getCaretEndPosition(textarea)
-					});
-					console.log('Undo: ' + p);
-					$data = p;
-					textarea.innerHTML = toCE(p);
-					setCaretPositionSE(getCaretData(textarea, pos.start), getCaretData(textarea, pos.end));
-				}
-			} else {
-				console.warn('Nothing to undo');
+			const p = store.undo();
+			if (p) {
+				$data = p.text;
+				textarea.innerHTML = toCE(p.text);
+				setCaretPositionSE(getCaretData(textarea, p.start), getCaretData(textarea, p.end));
 			}
-			console.log('Redo stack: ' + next_text);
 		} else if (e.key == 'v' && (down_keys.includes('Control') || down_keys.includes('Meta'))) {
 			e.preventDefault();
 			triggerChange();
@@ -180,7 +171,6 @@
 			debouncedTriggerChange();
 			await triggerCharInsertOrOverwrite(e.key);
 		}
-		//console.log(e.key);
 	}
 	function keyup(e: KeyboardEvent) {
 		down_keys.splice(down_keys.indexOf(e.key), 1);
@@ -239,6 +229,7 @@
 		resize: none;
 		box-sizing: border-box;
 		border: none;
+		white-space: pre-wrap;
 		overflow-wrap: break-word;
 		word-break: break-word;
 	}
