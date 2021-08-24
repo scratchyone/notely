@@ -243,7 +243,7 @@
 	.statement {
 		font-size: 15px;
 		color: #999;
-		position: absolute;
+		position: fixed;
 		bottom: 10px;
 		text-align: center;
 		font-family: 'system-ui';
