@@ -180,6 +180,24 @@
 	function keyup(e: KeyboardEvent) {
 		down_keys.splice(down_keys.indexOf(e.key), 1);
 	}
+	async function cut(e: ClipboardEvent) {
+		e.preventDefault();
+		triggerChange();
+		const start = getCaretPosition(textarea);
+		const end = getCaretEndPosition(textarea);
+		const text = $data.slice(start, end);
+		navigator.clipboard.writeText(text);
+		$data = $data.slice(0, start) + $data.slice(end);
+		textarea.innerHTML = toCE($data);
+		await tick();
+		setCaretPosition(getCaretData(textarea, start));
+	}
+	async function paste(e: ClipboardEvent) {
+		e.preventDefault();
+		triggerChange();
+		const text = await navigator.clipboard.readText();
+		await triggerCharInsertOrOverwrite(text);
+	}
 </script>
 
 <svelte:window
@@ -195,6 +213,8 @@
 		bind:this={textarea}
 		on:keydown={keydown}
 		on:keyup={keyup}
+		on:cut={cut}
+		on:paste={paste}
 		autofocus
 		placeholder="Start typing markdown..."
 	/>
