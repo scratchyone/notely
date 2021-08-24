@@ -46,7 +46,7 @@
 			} else if (item.type === 'italic') {
 				mid += `<i><span class="dim">*</span>${item.text}<span class="dim">*</span></i>`;
 			} else if (item.type === 'header') {
-				mid += `<h${item.level}>${'#'.repeat(item.level)}${item.text}</h${item.level}>`;
+				mid += `<h${item.level}><span class="dim">${'#'.repeat(item.level)}</span>${item.text}</h${item.level}>`;
 			}
 		}
 
