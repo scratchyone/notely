@@ -1,5 +1,5 @@
 import moo from 'moo';
-import LogBit from 'logbit';
+import { LogBit } from 'logbit';
 const log = new LogBit('MarkdownParser');
 
 class ParserStream<T> {
