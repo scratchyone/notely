@@ -23,6 +23,7 @@
 	} else {
 		setLogLevel(LOG_LEVELS.TRACE);
 	}
+	log.info('MainUIHandler initialized');
 	import { onMount, tick } from 'svelte';
 	let textarea;
 	const debounced = debounce(async (text) => {
