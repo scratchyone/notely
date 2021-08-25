@@ -38,22 +38,30 @@
 		const parsed = parseMarkdown(m);
 		log.debug(`Markdown AST: `, parsed);
 		let mid = '';
-		for (const item of parseMarkdown(m)) {
+		for (const item of parsed) {
 			if (item.type === 'text') {
 				mid += item.text;
+			} else if (item.type === 'boldAndItalic') {
+				mid += `<i><b><span class="dim">***</span>${item.text}<span class="dim">***</span></b></i>`;
 			} else if (item.type === 'bold') {
 				mid += `<b><span class="dim">**</span>${item.text}<span class="dim">**</span></b>`;
 			} else if (item.type === 'italic') {
 				mid += `<i><span class="dim">*</span>${item.text}<span class="dim">*</span></i>`;
 			} else if (item.type === 'header') {
-				mid += `<h${item.level}><span class="dim">${'#'.repeat(item.level)}</span>${item.text}</h${item.level}>`;
+				mid += `<h${item.level}><span class="dim">${'#'.repeat(item.level)}</span>${item.text}</h${
+					item.level
+				}>`;
+			} else if (item.type === 'listBullet') {
+				mid += `•`;
+			} else if (item.type === 'link') {
+				mid += `<span class="link"><span class="dim">[</span>${item.text}<span class="dim">](</span>${item.url}<span class="dim">)</span></span>`;
 			}
 		}
 
 		if (mid[mid.length - 1] === '\n') mid = mid + '\n';
 
 		if (mid.length == 0) return '';
-
+		log.trace(`Generated HTML: ${mid}`);
 		return '<span>' + mid + '</span>';
 	}
 	async function triggerCharInsertOrOverwrite(c: string) {
@@ -273,5 +281,14 @@
 	}
 	#textarea:global .dim {
 		opacity: 30%;
+	}
+	#textarea:global .link {
+		text-decoration: underline;
+		text-decoration-color: rgba(0, 0, 0, 0.4);
+	}
+	@media (prefers-color-scheme: dark) {
+		#textarea:global .link {
+			text-decoration-color: rgba(255, 255, 255, 0.4);
+		}
 	}
 </style>

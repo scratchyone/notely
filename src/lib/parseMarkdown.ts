@@ -32,16 +32,23 @@ class ParserStream<T> {
 		return this.characters.splice(0, n);
 	}
 }
-let lexer = moo.compile({
+const lexer = moo.compile({
 	header: /^#+\s*.*$/,
-	bold: /\*\*.*\*\*/,
-	italic: /\*.*\*/,
-	text: { match: /[\S\s]+?/, lineBreaks: true }
+	link: /\[.+\]\(.+\)/,
+	boldAndItalic: /\*\*\*.+\*\*\*/,
+	bold: /\*\*.+\*\*/,
+	italic: /\*.+\*/,
+	listItem: /^[-*]\s+/,
+	text: { match: /[\S\s]/, lineBreaks: true }
 });
-export type MAst = Header | Bold | Italic | Text;
+export type MAst = Header | Bold | Italic | Text | ListBullet | Link | BoldAndItalic;
 interface Header {
 	type: 'header';
 	level: number;
+	text: string;
+}
+interface BoldAndItalic {
+	type: 'boldAndItalic';
 	text: string;
 }
 interface Bold {
@@ -56,47 +63,68 @@ interface Text {
 	type: 'text';
 	text: string;
 }
+interface ListBullet {
+	type: 'listBullet';
+}
+interface Link {
+	type: 'link';
+	text: string;
+	url: string;
+}
 
 export function parseMarkdown(md: string): MAst[] {
 	lexer.reset(md);
-	const stream = new ParserStream<{ type: 'text' | 'bold' | 'italic' | 'header'; text: string }>(
-		Array.from(lexer)
-	);
+	const stream = new ParserStream<{
+		type: 'text' | 'bold' | 'italic' | 'header' | 'listItem' | 'link' | 'boldAndItalic';
+		text: string;
+	}>(Array.from(lexer));
 	const ast: MAst[] = [];
 	let stringBuffer = '';
 	log.debug('Parsing markdown');
 	while (!stream.atEnd) {
 		const token = stream.consume();
-		if (token.type === 'text') {
-			stringBuffer += token.text;
-			continue;
-		} else if (token.type === 'header') {
+		if (token.type !== 'text') {
 			if (stringBuffer.length > 0) {
 				ast.push({ type: 'text', text: stringBuffer });
 				stringBuffer = '';
 			}
+		}
+		if (token.type === 'text') {
+			stringBuffer += token.text;
+		} else if (token.type === 'header') {
 			ast.push({
 				type: 'header',
 				level: token.text.match(/^#+/)[0].length,
 				text: token.text.replace(/^#+/, '')
 			});
+		} else if (token.type === 'boldAndItalic') {
+			ast.push({
+				type: 'boldAndItalic',
+				text: token.text.replace(/\*\*\*(.*)\*\*\*/, '$1')
+			});
 		} else if (token.type === 'bold') {
-			if (stringBuffer.length > 0) {
-				ast.push({ type: 'text', text: stringBuffer });
-				stringBuffer = '';
-			}
 			ast.push({
 				type: 'bold',
-				text: token.text.replace(/^\*\*(.*)\*\*/, '$1')
+				text: token.text.replace(/^\*\*(.+)\*\*/, '$1')
 			});
 		} else if (token.type === 'italic') {
-			if (stringBuffer.length > 0) {
-				ast.push({ type: 'text', text: stringBuffer });
-				stringBuffer = '';
-			}
 			ast.push({
 				type: 'italic',
-				text: token.text.replace(/^\*(.*)\*$/, '$1')
+				text: token.text.replace(/^\*(.+)\*$/, '$1')
+			});
+		} else if (token.type === 'listItem') {
+			ast.push({
+				type: 'listBullet'
+			});
+			ast.push({
+				type: 'text',
+				text: token.text.replace(/^[-*]/, '')
+			});
+		} else if (token.type === 'link') {
+			ast.push({
+				type: 'link',
+				text: token.text.replace(/\[(.+)\]\((.+)\)/, '$1'),
+				url: token.text.replace(/\[(.+)\]\((.+)\)/, '$2')
 			});
 		}
 	}
