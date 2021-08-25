@@ -40,7 +40,7 @@ export class TravelableStore<T> {
 	}
 	// Add a new state to the store
 	public snapshot(state: T): void {
-		console.info('Saving state: ', state);
+		console.debug('Saving state: ', state);
 		this.undoQueue.push(state);
 		if (this.undoQueue.length > this.maxHistory) {
 			this.undoQueue.shift();
