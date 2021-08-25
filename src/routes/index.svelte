@@ -14,6 +14,10 @@
 		setCaretPositionSE
 	} from '$lib/caret';
 	const log = new LogBit('MainUIHandler');
+	if (typeof window !== 'undefined') {
+		window['setLogLevel'] = setLogLevel;
+		window['LOG_LEVELS'] = LOG_LEVELS;
+	}
 	if (browser && location.hostname != 'localhost') {
 		setLogLevel(LOG_LEVELS.INFO);
 	} else {
